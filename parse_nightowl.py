@@ -3,7 +3,7 @@ import os
 import shutil
 import numpy as np
 import cv2
-
+import glob
 
 
 class NightOwls:
@@ -49,11 +49,22 @@ class NightOwls:
             save_label_dir = os.path.join(self.save_dir,"labels")
             os.makedirs(save_label_dir,exist_ok=True)
             save_label_path = os.path.join(self.save_dir,"labels",label_txt)
+            save_im_dir = os.path.join(self.save_dir,"images")
+            os.makedirs(save_im_dir,exist_ok=True)
             print("save_label_path:{}".format(save_label_path))
             c+=1
             #input()
             BB_list,label_list = self.Parse_NightOwls_Annotations_v2(i["id"])
             if len(BB_list)>0:
+                ## Save image.png
+                image_path_list = glob.glob(os.path.join(self.img_dir,"**","*.png"))
+                for im_path in image_path_list:
+                    im_file = im_path.split(os.sep)[-1]
+                    im_name = im_file.split(".")[0]
+                    if im_file==i["file_name"]:
+                        shutil.copy(im_path,save_im_dir)
+
+                ## Save label.txt
                 with open(save_label_path,'a') as f:
                     for i in range(len(BB_list)):
                         print(BB_list[i])
