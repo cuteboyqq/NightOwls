@@ -72,8 +72,8 @@ class NightOwls:
                         la = label_list[i]
                         # if la != 4: #filter out ignore areas label
                         bdd_la = self.label_mapping[la]
-                        x = float((int((BB_list[i][0] / self.im_width )*1000000))/1000000)
-                        y = float((int((BB_list[i][1] / self.im_height )*1000000))/1000000)
+                        x = float((int(((BB_list[i][0] + BB_list[i][2]/2.0) / self.im_width )*1000000))/1000000)
+                        y = float((int(((BB_list[i][1] + BB_list[i][3]/2.0) / self.im_height )*1000000))/1000000)
                         w = float((int((BB_list[i][2] / self.im_width )*1000000))/1000000)
                         h = float((int((BB_list[i][3] / self.im_height )*1000000))/1000000)
                         print(f'la:{bdd_la},x:{x},y:{y},w:{w},h:{h}')
