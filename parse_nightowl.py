@@ -34,6 +34,15 @@ class NightOwls:
         # 10: stop sign
         # 11: lane marking
         self.label_mapping = {1:0, 2:1, 3:1}
+        #==========Merge_NightOwlDetectionGT_And_YOLOADASDetection==========
+        self.nightowllabeldir = args.nightowllabel_dir
+        self.yoloadaslabeldir = args.yoloadaslabel_dir
+        self.savemergelabeldir = args.savemergelabel_dir
+        
+        self.yoloadas_wanted_label = [2,3,4,5,6,7,8,9,10,11]
+        #self.nightowl_det_mapping = {0:} #Because already have mapping when convert to yolo.txt
+        self.nightowl_wanted_label = [0,1]
+        self.yolov8_wanted_label = [11] #stop sign
 
     def Convert_To_YOLO_Format_Label_Txt(self):
         f= open(self.label_json)
@@ -144,6 +153,53 @@ class NightOwls:
         print(json.dumps(data, indent = 4, sort_keys=True))
 
 
+    def Merge_NightOwlDetectionGT_And_YOLOADASDetection(self):
+        '''
+        func: Merge_NightOwlDetectionGT_And_YOLOADASDetection
+            need parameter :
+                     self.nightowllabeldir = args.nightowllabel_dir
+                    self.yoloadaslabeldir = args.yoloadaslabel_dir
+                    self.savemergelabeldir = args.savemergelabel_dir
+                    self.yolov8labeldir = args.yolov8label_dir
+
+                    self.yoloadas_wanted_label = [2,3,4,5,6,7,8,9,10,11]
+                    self.nightowl_wanted_label = [0,1]
+                    self.yolov8_wanted_label = [11]
+
+        '''
+        os.makedirs(self.savemergelabeldir,exist_ok=True)
+        save_detection_label_dir = os.path.join(self.savemergelabeldir,"labels","detection","train")
+        os.makedirs(save_detection_label_dir,exist_ok=True)
+
+        yolo_adas_label_txt_path_list = glob.glob(os.path.join(self.yoloadaslabeldir,"***","**","*.txt"))
+        for i in range(len(yolo_adas_label_txt_path_list)):
+            print(f"{i}:{yolo_adas_label_txt_path_list[i]}")
+            label_txt = yolo_adas_label_txt_path_list[i].split(os.sep)[-1]
+            save_label_txt_path = os.path.join(save_detection_label_dir,label_txt)
+            save_f = open(save_label_txt_path,"a")
+
+            nightowl_label_path = os.path.join(self.nightowllabeldir,label_txt)
+            f_gt = None
+            if os.path.exists(nightowl_label_path):
+                with open(nightowl_label_path,"r") as f_gt:
+                    lines = f_gt.readlines()
+                    for line in lines:
+                        save_f.write(line)
+                        print(f"write GT label successful")
+
+            print(label_txt)
+            with open(yolo_adas_label_txt_path_list[i],"r") as yolo_f:
+                lines = yolo_f.readlines()
+                for line in lines:
+                    print(line)
+                    yolo_la = line.split(" ")[0]
+                    if int(yolo_la) in self.yoloadas_wanted_label:
+                        print(f"find wanted label {yolo_la}")   
+                        save_f.write(line)
+                        print(f"write label {yolo_la} successful")
+            save_f.close()
+
+        return NotImplemented
     
 
 def get_args_label():
@@ -164,6 +220,16 @@ def get_args_label():
 
     parser.add_argument('-imheight','--im-height',type=int,default=640,help='image height')
 
+    # =================Merge_NightOwlDetectionGT_And_YOLOADASDetection============================================================================
+    parser.add_argument('-nightowllabeldir','--nightowllabel-dir',help='nightowl label dir',\
+                        default="/home/ali/Projects/datasets/NightOwls/P_NightOwl_GT/labels")
+    parser.add_argument('-yoloadaslabeldir','--yoloadaslabel-dir',help='yoloadas label dir',\
+                        default="/home/ali/Projects/datasets/NightOwls/P_NightOwl_detection_v0.2.1020")
+    parser.add_argument('-savemergelabeldir','--savemergelabel-dir',help='save merge dataset dir',\
+                        default="/home/ali/Projects/datasets/NightOwls/NightOwls_Merge_dataset_2023-11-03")
+    
+    parser.add_argument('-yolov8labeldir','--yolov8label-dir',help='yolov8 label dir',\
+                        default="/home/ali/Projects/datasets/NightOwls/P_NightOwl_GT/labels")
     return parser.parse_args()
 
 if __name__=="__main__":
@@ -171,4 +237,5 @@ if __name__=="__main__":
    nightowls = NightOwls(args)
    #nightowls.Parse_NightOwls_Annotations()
    #nightowls.Parse_NightOwls_Images()
-   nightowls.Convert_To_YOLO_Format_Label_Txt()
+   #nightowls.Convert_To_YOLO_Format_Label_Txt()
+   nightowls.Merge_NightOwlDetectionGT_And_YOLOADASDetection()
